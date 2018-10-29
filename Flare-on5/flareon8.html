@@ -39,7 +39,7 @@ We can use Qemu to boot this drive by passing it in as a raw drive(shown below).
 <br>
 <br>
 <br>
-Not to dissimilar from other crackme's, this one displays some text and prompts for a password. In this case the story presented is that it is 1990 and a computer genius has forgotten his password and wants you to crack what is likely his own custom hard drive encryption.<br>
+Not too dissimilar from other crackme's, this one displays some text and prompts for a password. In this case the story presented is that it is 1990 and a computer genius has forgotten his password and wants you to crack what is likely his own custom hard drive encryption.<br>
 <br>
 Next step is to find the code to analyze. In the hex editor, there is a block of what looks to be code just above our data(the big FLARE ascii art) that is printed to the screen upon running. For the sake of organization, I chose to copy this block out into its own file to drag into IDA. IDA wants us to tell it what bit mode to disassemble our file as. At this point in the boot cycle, the processer is still in <a href="https://en.wikipedia.org/wiki/Real_mode">Real mode</a>, and code would be 16 bit. <br>
 <br>

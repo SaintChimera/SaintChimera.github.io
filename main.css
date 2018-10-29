@@ -26,9 +26,10 @@ body {
 }
 i {
     font-size: 10px;
+    color: #262626
 }
 img {
-    max-width: 100%:
+    max-width: 100%;
 }
 li.head {
     display: inline;
@@ -51,8 +52,14 @@ li {
     text-align: center;
     padding: 5px;
 }
+a{
+    color: #262626;
+}
 a:hover {
     color: #006000;
+}
+a:visited {
+    color: #262626;
 }
 .content { 
     text-align: left;
