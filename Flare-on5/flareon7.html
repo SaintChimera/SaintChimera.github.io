@@ -124,7 +124,7 @@ We've found our '?:' prompt text, so we likely have our input code very near. Se
 <br>
 <br>
 <br>
-We've found the loop that gives our prompt and accepts our input. I've renamed the calls to the name of the functions that were loaded into the locations being called. We can see that the number we give to the prompt is used as a port for the program to connect to. This loop froms 0x1D(decimal 29) times.<br>
+We've found the loop that gives our prompt and accepts our input. I've renamed the calls to the name of the functions that were loaded into the locations being called. We can see that the number we give to the prompt is used as a port for the program to connect to. This loop runs 0x1D(decimal 29) times meaning we will have 29 inputs before our flag is printed.<br>
 <br>
 When I analyzed this the first time, I tried setting up a listener in both netcat and python so that i could capture the connection and give it some data to recv. I was very confused when i could never get the challenge to connect to my listeners. I had done some research on <a href="https://docs.microsoft.com/en-us/windows/desktop/api/winternl/nf-winternl-ntdeviceiocontrolfile">NtDeviceIoControlFile</a> when i first saw it being loaded but hadn't analyzed it further. It was only after i couldnt capture the connections that i figured the program was intercepting the 'connect' and 'recv' calls and sending them to some funtion inside the program.<br>
 <br>
