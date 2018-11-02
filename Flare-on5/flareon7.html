@@ -136,15 +136,15 @@ The quickest thing to do is search all functions for interesting code that could
 <br>
 <br>
 Now lets analyze this code.<br>
-To enter the loop, var_67 must equal whatever value is in 'unk_180006b40' plus 'dword_180006be8' multiplied by 4. We can watch 'dword_180006be8' in our debugger to see that it is used as a counter that increments every time you input a number. Viewing var_67 in our debugger shows that it is equal to the value of our input. So whatever is in 'unk_18006b40' is the correct answers to our port numbers. It is then multiplied by 4 because the values within 'unk_180006b40' are not right next to eachother, they are 4 bytes apart with 0's in between.<br>
+To enter the loop, var_67 must equal whatever value is in ('unk_180006b40' + 'dword_180006be8' * 4). We can watch 'dword_180006be8' in our debugger to see that it is used as a counter that increments every time you input a number. Viewing var_67 in our debugger shows that it is equal to the value of our input. So whatever is in 'unk_180006b40' is the correct answers to our port numbers. It is then multiplied by 4 because the values within 'unk_180006b40' are not right next to eachother, they are 4 bytes apart with 0's in between.<br>
 <br>
 The loop has an XOR and will run 29 times. This loop iterates over every value in 'unk_18006b40' XOR'ing it with your input(in var_67). Then it will save the result back into 'unk_18006b40'.<br>
 <br>
-Then there is a second/lower block of code that runs whether your input is correct or not. This block XOR's single values from 'unk_180006bb8' and 'unk_18006b40'. The result of this XOR is saved back into 'unk_180006bb8'. Since 'unk_180006bb8' is being overwritten with the result of our XOR, this is likely the data being decrypted. 'unk_18006b40' not being changed within this second/lower block hints that it is the key to the XOR decryption.<br>
+Then there is a second/lower block of code that runs whether your input is correct or not. This block XOR's single values from 'unk_180006bb8' and 'unk_18006b40'. The result of this XOR is saved back into 'unk_180006bb8'. Since 'unk_180006bb8' is being overwritten with the result of our XOR, this is likely the data being decrypted. 'unk_180006b40' not being changed within this second/lower block hints that it is the key to the XOR decryption.<br>
 <br>
 <br>
-<b>unk_180006b40 = 0F,57,61,77,B,FA,B5,D1,81,99,AC,A7,90,58,1A,52,C,A0,8,2D,ED,D5,6D,E7,E0,F2,BC,E9,F2</b><br>
-<b>unk_180006bb8 = 5F,68,44,62,23,BA,21,54,33,73,4,65,50,97,72,26,1,C4,CD,11,B6,Bh,D6,F9,58,76,7E,65,69</b><br>
+<b>unk_180006b40 = 0F, 57, 61, 77, B, FA, B5, D1, 81, 99, AC, A7, 90, 58, 1A, 52, C, A0, 8, 2D, ED, D5, 6D, E7, E0, F2, BC, E9, F2</b><br>
+<b>unk_180006bb8 = 5F, 68, 44, 62, 23, BA, 21, 54, 33, 73, 4, 65, 50, 97, 72, 26, 1, C4, CD, 11, B6, Bh, D6, F9, 58, 76, 7E, 65, 69</b><br>
 <br>
 <br>
 <br>
@@ -154,12 +154,13 @@ So what we appear to have is an answer array which is also used to decrypt the f
 <br>
 #!/usr/bin/python3<br>
 <br>
-answer_array = [0xF,0x57,0x61,0x77,0xB,0xFA,0xB5,0xD1,0x81,0x99,0xAC,0xA7,0x90,0x58,0x1A,0x52,0xC,0xA0,0x8,0x2D,0xED,0xD5,0x6D,0xE7,0xE0,0xF2,0xBC,0xE9,0xF2]<br>
-<br>
-for a in range(0,len(answer_array)):<br>
-    for b in range(a,len(answer_array)-1):<br>
-        answer_array[b+1] = answer_array[b+1] ^ answer_array[a]<br>
-print(answer_array)<br>
+answer_array = [0xF, 0x57, 0x61, 0x77, 0xB, 0xFA, 0xB5, 0xD1, 0x81, 0x99, 0xAC, 0xA7, 0x90, 0x58, 0x1A, 0x52, 0xC, 0xA0, 0x8, 0x2D, 0xED, 0xD5, 0x6D, 0xE7, 0xE0, 0xF2, 0xBC, 0xE9, 0xF2]<br>
+<pre>
+for a in range(0,len(answer_array)):
+    for b in range(a,len(answer_array)-1):
+        answer_array[b+1] = answer_array[b+1] ^ answer_array[a]
+print(answer_array)
+</pre>
 <br>
 <br>
 <br>
