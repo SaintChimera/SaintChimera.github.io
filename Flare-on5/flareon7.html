@@ -155,12 +155,11 @@ So what we appear to have is an answer array which is also used to decrypt the f
 #!/usr/bin/python3<br>
 <br>
 answer_array = [0xF, 0x57, 0x61, 0x77, 0xB, 0xFA, 0xB5, 0xD1, 0x81, 0x99, 0xAC, 0xA7, 0x90, 0x58, 0x1A, 0x52, 0xC, 0xA0, 0x8, 0x2D, 0xED, 0xD5, 0x6D, 0xE7, 0xE0, 0xF2, 0xBC, 0xE9, 0xF2]<br>
-<pre>
-for a in range(0,len(answer_array)):
-    for b in range(a,len(answer_array)-1):
-        answer_array[b+1] = answer_array[b+1] ^ answer_array[a]
-print(answer_array)
-</pre>
+<br>
+for a in range(0,len(answer_array)):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for b in range(a,len(answer_array)-1):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;answer_array[b+1] = answer_array[b+1] ^ answer_array[a]<br>
+print(answer_array)<br>
 <br>
 <br>
 <br>
