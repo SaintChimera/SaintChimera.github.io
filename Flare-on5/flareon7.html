@@ -27,10 +27,10 @@
   <div id="box-center">
     <div class="content">
 
-Challenge 7: WOW<br>
+Challenge 7: "WOW"<br>
 <br>
 <br>
-This challenge presents us a windows executable named WorldOfWarcraft. The first thing I will typically do when given a new executable is load it into a few static analysis tools. PEstudio, Detect it easy(Die), and CFF Explorer are easy first options and we can take note of how the software was written/compiled, any interesting API calls, and any interesting strings. In this case we have a few API calls that we will want to look into and a few strings that we can use to pivot off of. There is also an export that we should be very interested in. its not normal for an executable to have an export.<br><br>
+This challenge presents us a windows executable named WorldOfWarcraft. The first thing I will typically do when given a new executable is load it into a few static analysis tools. PEstudio, Detect it easy(Die), and CFF Explorer are easy first options and we can take note of how the software was written/compiled, any interesting API calls, and any interesting strings. In this case we have a few API calls that we will want to look into and a few strings that we can use to pivot off of. There is also an export that we should be very interested in. It's not normal for an executable to have an export.<br><br>
 <br>
 API's:<br>
 CreateFileA<br>
@@ -46,7 +46,7 @@ EXPORT:<br>
 unsigned __int64 __stdcall X64Call(void*)<br>
 <br>
 <br>
-The strings are the most interesting at first. We can load the executable up in IDA and do an xref(hotkey: x) search for where both of these strings are used. Both strings are used near each other and there is some interesting code surrounding both. A number of hex digits that are not all printable ASCII characters being pushed onto the stack and our string 'n1ght_4lve$_R_c00L.bin' being pushed as an argument to sub_1001910.<br>
+The strings 'n1ght_4lve$_R_c00L.bin' and 'A_l1ttl3_P1C_0f_h3aV3n' are the most interesting at first. We can load the executable up in IDA and do an xref(hotkey: x) search for where both of these strings are used. Both strings are used near each other and there is some interesting code surrounding both. A number of hex digits that are not all printable ASCII characters being pushed onto the stack and our string 'n1ght_4lve$_R_c00L.bin' being pushed as an argument to sub_1001910.<br>
 A quick scan of sub_1001910 makes it obvious what its there to do. This function simply takes in a file name, loads the contents of the file onto the heap, then loads the content off the heap and into an argument location which is on the stack. This allows us to name the function within IDA. I'm going to name it 'read_file_by_name'<br>
 <br>
 <img src="flareon7_pics/IDA_1.png"/><br>
@@ -113,7 +113,7 @@ Back to the extracted dll. Just in opening it in IDA, and selecting our first fu
 <i>dll interesting strings</i><br>
 <br>
 <br>
-Viewing strings for this dll gives some information about another embedded DLL named crackme.dll which starts at 0x180005130. For the sake of cleanliness, i chose do dump this to another file to be analyzed individually.<br>
+Viewing strings for this dll gives some information about another embedded DLL named crackme.dll which starts at 0x180005130. For the sake of cleanliness, i chose to dump this to another file to be analyzed individually.<br>
 <br>
 Again viewing strings, crackme.dll seems to have the most interesting strings we've seen yet. 'WSAStartup', 'htons', 'inet_addr', 'closesocket', 'recv', 'send', 'connect', and 'socket' all relate to opening and interacting with a socket. '127.0.0.1' is our IP to connect to, and we see the '?:' which we recognize as our prompt text from earlier. it is also interesting that we see 'ZwDeviceIoControlFile' referenced within these strings as well. Searching for where these strings are used leads you to a table with multiple calls to GetProcAddress. This is searching for the location of these functions within our parent process and returning them. <br>
 <br>
