@@ -129,7 +129,7 @@ Lets look at what is passed as arguments to the call to RCX and where RCX is set
 <ul><br>
 <li>RDI is set to the value of the location of our input string added to the value at offset +0x0c. This is setting the location of the character or substring to be compared. This makes it clear that offset +0x0c is the location of the substring to be compared.</li>
 <li>RDX is set from the manipulation of our counter with 0x20 added, then the location of that value plus 0x605100 is stored into a register to later be moved to RDX. When our counter is 0, RDX will be set to the value 0x605120. We can only assume the data at this location is our obfuscated answers.</li>
-<li>RSI is pulled straight from offset +0x10. This would make sense to be the length of the substring to be compared, since we saw it added to +0x0c earlier and compared against string length.</li><br>
+<li>RSI is pulled straight from offset +0x10. This would make sense to be the length of the substring to be compared, since we saw it added to +0x0c earlier and compared against string length.</li>
 <li>RCX is set as the value sitting at offset +0x00. This means the location of our comparison code is sitting in our answer block.</li>
 </ul><br>
 <br>
@@ -161,7 +161,7 @@ Next we need to script the running of our patched binary(named magic_patched on 
 <ol><br>
 <li>The script uses r2pipe to load our patched binary in debug mode(-d) with a debug profile(magic_patched.rr2) that told r2 to accept stdin from a file supplied(stdin=magic_patched_input.txt). This file just had 70 random characters, since we patched the binary, it doesn't matter what we input.</li>
 <li>The script sets a breakpoint(db) at a spot in the binary that we know the answer block will have been changed from the last execution.</li>
-<li>The script will loop 666 times continuing execution(dc), seeking to to location of the answer block(s), and writing the answer block to a file(wtf)</li><img src="flareon6_pics/IDA_5.png"/><br>
+<li>The script will loop 666 times continuing execution(dc), seeking to to location of the answer block(s), and writing the answer block to a file(wtf)</li><img src="flareon6_pics/IDA_5.png"/>
 </ol><br>
 <br>
 <br>
