@@ -41,7 +41,7 @@ We can use Qemu to boot this drive by passing it in as a raw drive(shown below).
 <br>
 Not too dissimilar from other crackme's, this one displays some text and prompts for a password. In this case the story presented is that it is 1990 and a computer genius has forgotten his password and wants you to crack what is likely his own custom hard drive encryption.<br>
 <br>
-Next step is to find the code to analyze. In the hex editor, there is a block of what looks to be code just above our data(the big FLARE ascii art) that is printed to the screen upon running. For the sake of organization, I chose to copy this block out into its own file to drag into IDA. IDA wants us to tell it what bit mode to disassemble our file as. At this point in the boot cycle, the processer is still in <a href="https://en.wikipedia.org/wiki/Real_mode">Real mode</a>, and code would be 16 bit. <br>
+Next step is to find the code to analyze. In the hex editor, there is a block of what looks to be code just above our data(the big FLARE ascii art) that is printed to the screen upon running. For the sake of organization, I chose to copy this block out into its own file to drag into IDA. IDA wants us to tell it what bit mode to disassemble our file as. At this point in the boot cycle, the processer is still in <a href="https://en.wikipedia.org/wiki/Real_mode" target="_blank">Real mode</a>, and code would be 16 bit. <br>
 <br>
 <img src="flareon8_pics/IDA_1.png"/><br>
 <i>Disassembled code</i><br>
@@ -49,7 +49,7 @@ The assembly looks correct to me. Time to start the real work!<br>
 <br>
 <br>
 <br>
-One thing that i was unfamiliar with stepping into this challenge that we see often is the "INT" instruction. Typical executables do not use this instruction. Quick research showed that this is the <a href="https://en.wikipedia.org/wiki/INT_(x86_instruction)">Interupt</a> instruction. The most common uses of INT within this code is <a href="https://en.wikipedia.org/wiki/INT_10H">INT 10h</a>, <a href="https://en.wikipedia.org/wiki/INT_16H">INT 16h</a>, and a single function which calls <a href="http://vitaly_filatov.tripod.com/ng/asm/asm_029.html">INT 1Ah</a>. These instructions interact with Video, Keyboard, and System Time respectively in Real mode. In the context of our analysis, these serve a similar purpose to API calls, giving us some context of intent to our functions. Analysis of these instructions allows us to name our functions.<br>
+One thing that i was unfamiliar with stepping into this challenge that we see often is the "INT" instruction. Typical executables do not use this instruction. Quick research showed that this is the <a href="https://en.wikipedia.org/wiki/INT_(x86_instruction)" target="_blank">Interupt</a> instruction. The most common uses of INT within this code is <a href="https://en.wikipedia.org/wiki/INT_10H" target="_blank">INT 10h</a>, <a href="https://en.wikipedia.org/wiki/INT_16H" target="_blank">INT 16h</a>, and a single function which calls <a href="http://vitaly_filatov.tripod.com/ng/asm/asm_029.html" target="_blank">INT 1Ah</a>. These instructions interact with Video, Keyboard, and System Time respectively in Real mode. In the context of our analysis, these serve a similar purpose to API calls, giving us some context of intent to our functions. Analysis of these instructions allows us to name our functions.<br>
 <br>
 <img src="flareon8_pics/IDA_2.png"/><br>
 <i>Renamed functions for context</i><br>
@@ -61,7 +61,7 @@ in this order, one run through our for loop will<br>
 <ol>
 <li>Move our incrementing counter into bx. We can tell this is our counter by the 'inc [bp+var_2]' instruction at the end of the while loop.</li>
 <li>Add bx(counter) and si(previously set to '8809h'), dereference the result, then move it into cl. Next instruction is a cmp cl,0 which ensures there is a value in cl.</li>
-<li>Divide our incrementing counter(ax) by an argument passed into the function(set to bx) and move the remainder(dx) into bx. This is a typical <a href="https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/what-is-modular-arithmetic">modulus</a> operation. This operation is often used to continually iterate over a string of a certain length(modulus divisor) given an incrementing counter.</li>
+<li>Divide our incrementing counter(ax) by an argument passed into the function(set to bx) and move the remainder(dx) into bx. This is a typical <a href="https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/what-is-modular-arithmetic" target="_blank">modulus</a> operation. This operation is often used to continually iterate over a string of a certain length(modulus divisor) given an incrementing counter.</li>
 <li>Add the modulo result(bx) and di(a passed in argument), dereference the result, then move it into al.</li>
 <li>XOR al and cl, storing the result in al.</li>
 <li>Add our counter(moved into bx) to the previously set static value 8809h(stored in si), dereference the result, then move al(result of XOR) into that location</li>
@@ -81,7 +81,7 @@ Since our two decryption(deobber_decryptor) calls occur immediately after our sy
 <br>
 <br>
 <br>
-NOW is the funnest part! The author dropped us a hint that we should use. The prompt text states <b>"February 06,1990... Despite being a 16-year-old reverse engineering genius, I seem to have forgotten the password to my PC. Can you help me???"</b>. The date is used as part of the decryption, and the author has given us the date! lets use '<a href="https://github.com/wolfcw/libfaketime">faketime</a>' to give Qemu the time that our code wants, then we'll view the result in our debugger.<br>
+NOW is the funnest part! The author dropped us a hint that we should use. The prompt text states <b>"February 06,1990... Despite being a 16-year-old reverse engineering genius, I seem to have forgotten the password to my PC. Can you help me???"</b>. The date is used as part of the decryption, and the author has given us the date! lets use '<a href="https://github.com/wolfcw/libfaketime" target="_blank">faketime</a>' to give Qemu the time that our code wants, then we'll view the result in our debugger.<br>
 <br>
 # faketime '1990-02-06 01:00:00' qemu-system-i386 -s -hda doogie.bin<br>
 <br>
