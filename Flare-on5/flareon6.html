@@ -93,7 +93,7 @@ The first comparison is between a variable which came from an argument previousl
 There is something important to note about how RAX is set though. In this order, our code <br>
 <ol><br>
 <li>Moves the loop counter into RAX.</li>
-<li>Bitwise shifting that value in RAX left by 3, effectively multiplying it by 2 to the 3rd power (RAX*2^3).</li><
+<li>Bitwise shifting that value in RAX left by 3, effectively multiplying it by 2 to the 3rd power (RAX*2^3).</li>
 <li>Adding the value in RDX which at this time is equal to the normal counter value.</li>
 <li>Bitwise shifting the value in RAX left by 5, effectively multiplying it by 2 to the 5th power (RAX*2^5).</li>
 <li>Adding the static value 0x60510c to RAX.</li>
@@ -249,7 +249,7 @@ Last thing to do is to write the code that generates all of our passwords off of
 <br>
 Script:<a href="https://github.com/SaintChimera/SaintChimera.github.io/tree/master/Flare-on5/flareon6_code/runnerator.py" target="_blank">runnerator.py</a><br>
 <br>
-Runnerator.py is effectively a for loop running 666 times which loads each answer block dump and extracts the substring starting point, substring length, and the first 8 bytes of the part of each sub block which contains the obfuscated answer. It will compare the first 8 bytes of the obfuscated answer against the answer dictionary which is shown above. There is only 1 edge case where the first 8 bytes for two different substrings have the first 8 bytes being the same. For this edge case I set the value equal to "Z"("e2c73500000" : ["Z"],) in the answer dictionary as a trigger. There is code after the point where the answer is correlated that will check if the correlated answer is "Z". If it is then it will grab the 9th byte and check if it is equal to 0xA0. If it is then it will re-correlate our answer to " ","w"(0x20,0x77).<br>
+Runnerator.py is effectively a for loop running 666 times which loads each answer block dump and extracts the substring starting point, substring length, and the first 8 bytes of the part of each sub block which contains the obfuscated answer. It will compare the first 8 bytes of the obfuscated answer against the answer dictionary which is shown above. There is only 1 edge case where the first 8 bytes for two different substrings have the first 8 bytes being the same. For this edge case I set the value equal to "Z"("e2c73500000" : ["Z"],) in the answer dictionary as a trigger. There is code after the point where the answer is correlated that will check if the correlated answer is "Z". If it is then it will grab the 9th byte and check if it is equal to 0xA0. If it is then it will re-correlate our answer to " ","w"(0x20,0x77), otherwise it will set it to " "(0x20).<br>
 <br>
 <br>
 Running runnerator.py gives us the <a href="https://github.com/SaintChimera/SaintChimera.github.io/tree/master/Flare-on5/flareon6_code/answer_list.txt" target="_blank">answer list</a> which we can feed into the original magic binary with hash '9BD096FFFA9C500066FE5C7FBCE820CD302DEC0AE879AE78DC46FB831B6D5C80' and our answer will be decrypted and printed out to us!<br>
