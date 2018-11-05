@@ -171,7 +171,7 @@ Next we need to script the running of our patched binary(named magic_patched on 
 import r2pipe<br>
 import time<br>
 <br>
-r2 = r2pipe.open("magic_patched", flags=['-e', 'dbg.profile=magic_patched.rr2','-d'])<br>
+r2 = r2pipe.open("magic_patched",flags=['-e','dbg.profile=magic_patched.rr2','-d'])<br>
 r2.cmd('db 0x403b5a')<br>
 <br>
 for a in range(1,667):<br>
