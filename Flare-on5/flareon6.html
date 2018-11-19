@@ -76,7 +76,8 @@ If we xref Fail_Condition, we have 2 places where it is called. both of which ar
 <br>
 <img src="flareon6_pics/IDA_5.png"/><br>
 ...<br>
-<img src="flareon6_pics/IDA_4.png"/>
+...<br>
+<img src="flareon6_pics/IDA_4.png"/><br>
 <i>jumps leading to fail conditions</i><br>
 <br>
 <br>
@@ -146,11 +147,11 @@ For ease, i dumped the whole answer block for both the first execution and the s
 <br>
 <br>
 <br>
-This means, if we can dump the answer blocks for 666 different executions starting with a known answer block (hash of the binary) we can brute force each substring of our answer for the first known answer block and create a dictionary with the answer values of each sub block mapped to the results of our brute force. So we would be creating a dictionary of the stored obfuscated answers within each sub block, to the substring answer gathered through the brute force. Then we could use that dictionary to generation correct answer strings for all 666 keys, and feed them back into the program. We would have to make sure we have the same starting point every time since we see that the binary changes. This will be verifiable by getting the sha256 of the binary before each execution. If the hash is not our known starting point then we will destroy the binary and copy over a backup which matches the known hash.<br>
+This means, if we can dump the answer blocks for 666 different executions starting with a known answer block (hash of the binary) we can brute force each substring of our answer for the first known answer block and create a dictionary with the answer values of each sub block mapped to the results of our brute force. So we would be creating a dictionary of the stored obfuscated answers within each sub block to the substring answer gathered through the brute force. Then we could use that dictionary to generation correct answer strings for all 666 keys, and feed them back into the program. We would have to make sure we have the same starting point every time since we see that the binary changes. This will be verifiable by getting the sha256 of the binary before each execution. If the hash is not our known starting point then we will destroy the binary and copy over a backup which matches the known hash.<br>
 <br>
 The hash of the binary that was downloaded was '9BD096FFFA9C500066FE5C7FBCE820CD302DEC0AE879AE78DC46FB831B6D5C80' so before every execution, we'll verify the hash or copy over a backup which matches this hash.<br>
 <br>
-First we need to dump 666 answer blocks. Rather than sitting in a debugger myself and continuously clicking the Zero flag so that execution continued every single time(which would be 33*666 times), I decided to script it. I used Python3, <a href="https://github.com/radare/radare2-r2pipe" target="_blank">r2pipe</a>, and some easy binary patching. Since we know that our 'test EAX,EAX' checks if the register is zero or non-zero, The patch was simply changing our 'test EAX,EAX' to check a register that is never zero. In this case EBX is always 14 before and after the call to RCX. So we patched the comparison to 'test EBX,EBX' so that we never fail. <br>
+First we need to dump 666 answer blocks. Rather than sitting in a debugger myself and continuously setting the Zero flag so that execution continued every single time(which would be 33*666 times), I decided to script it. I used Python3, <a href="https://github.com/radare/radare2-r2pipe" target="_blank">r2pipe</a>, and some easy binary patching. Since we know that our 'test EAX,EAX' checks if the register is zero or non-zero, The patch was simply changing our 'test EAX,EAX' to check a register that is never zero. In this case EBX is always 14 before and after the call to RCX. So we patched the comparison to 'test EBX,EBX' so that we never fail. <br>
 <br>
 <img src="flareon6_pics/IDA_8.png"/><br>
 <i>patch showing a binary that will not fail</i><br>
@@ -191,12 +192,12 @@ stdin=magic_patched_input.txt<br>
 <br>
 <br>
 <br>
-This grabs our all of our answer blocks, now we need to brute force our first answer block to create our dictionary. We will be using r2pipe and Python3 for this as well. The code is too long to include in more than just a link, but I will describe it and provide a link to the actual code below. The code contains enough commenting that it should be easy to follow.<br>
+Now we need to brute force our first answer block to create our dictionary. We will be using r2pipe and Python3 for this as well. The code is too long to include in more than just a link, but I will describe it and provide a link to the actual code below. The code contains enough commenting that it should be easy to follow.<br>
 <br>
 <br>
 Script:<a href="https://github.com/SaintChimera/SaintChimera.github.io/tree/master/Flare-on5/flareon6_code/rad_magic.py" target="_blank">rad_magic.py</a><br>
 <br>
-In short, The brute forcer sets breakpoints before and after the call to RCX. Upon first execution, the code will dump the values stored in all registers to local variables. It will take our substring length from the dumped registers and enter a for loop which will generate our brute force substring from valid ASCII characters(0x20-0x7f) and write those brute force substrings to the location where our input string is stored on the stack. It will then continue execution through the call to RCX and hit a breakpoint after that call. At this point it can check the value of RAX to see if the guess was correct. The register is equal to 1 if it is correct and 0 if it is not. If the answer was correct we print the answer and stop execution. Otherwise we continue the loop, set the registers back to their state just before the call to RCX, set the instruction pointer(RIP) back to the location of our call to RCX, then run it again. <br>
+In short, The brute forcer sets breakpoints before and after the call to RCX(the comparison functions). Upon first execution, the code will dump the values stored in all registers to local variables. It will take our substring length from the dumped registers and enter a for loop which will generate our brute force substring from valid ASCII characters(0x20-0x7f) and write those brute force substrings to the location where our input string is stored on the stack of the debuggee. It will then continue execution through the call to RCX and hit a breakpoint after that call. At this point it can check the value of RAX to see if the guess was correct. The register is equal to 1 if it is correct and 0 if it is not. If the answer was correct we print the answer and stop execution. Otherwise we continue the loop, set the registers back to their state just before the call to RCX, set the instruction pointer(RIP) back to the location of our call to RCX, then run it again. <br>
 <br>
 <img src="flareon6_pics/run_2.png"/><br>
 <i>brute forcer printing answer</i><br>
