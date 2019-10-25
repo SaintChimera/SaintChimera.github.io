@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SaintChimera RE blog</title>
+  <link href="https://SaintChimera.github.io/main.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+  <div id="menu">
+    <ul>
+      <li class="head"><a href="https://SaintChimera.github.io/index.html">Blog</a></li>
+      <li class="head"><a href="https://SaintChimera.github.io/about.html">About</a></li>
+    </ul>
+  </div>
+  
+  <div id="padding">
+  </div>
+  
+  <div id="box-left">
+    <div class="content" id="about">
+      Twitter: <a href="https://twitter.com/SaintChimeraRL" target="_blank">@SaintChimeraRL</a><br>
+      Email: <a href=mailto:SaintChimeraRL@gmail.com" target="_blank">SaintChimeraRL@gmail.com</a>
+    </div>
+  </div>
+  <div id="box-center">
+    <div class="content">
+
+Challenge 1: "Memecat Battlestation"<br>
+<br>
+<br>
+This is a simple game. Reverse engineer it to figure out what "weapon codes" you need to enter to defeat each of the two enemies and the victory screen will reveal the flag. Enter the flag here on this site to score and move on to the next level.
+<br>
+* This challenge is written in .NET. If you don't already have a favorite .NET reverse engineering tool I recommend dnSpy
+<br>
+** If you already solved the full version of this game at our booth at BlackHat  or the subsequent release on twitter, congratulations, enter the flag from the victory screen now to bypass this level.
+<br>
+<br>
+The first challenge gives you challenge message gives some hints(below). So lets open this in dnspy and see what the decompiled source looks like.
+<br>
+<img src="flareon1_pics/memecat1.png"/><br>
+<i>first password function</i><br>
+<br>
+An if statement wrapping some code where it checks your input against the string "RAINBOW". Thats the first password. Onto the next.
+<br>
+<img src="flareon1_pics/memecat2.png"/><br>
+<i>second password function></i><br>
+<br>
+This one relies on another function to validate the input. This function just iterates over the array of random characters below it and xor's each one against the plaintext "A".
+<br>
+reimplemented in python, it would look like the logic below.
+
+<br>
+answer = [bytes([3]),b' ',b'&',b'$',b'-',bytes([0x1e]),bytes([2]),b' ',b'/',b'/',b'.',b'/']<br>
+for i in range(0,len(answer)):<br>
+	answer[i] = ord(answer[i]) ^ ord("A");<br>
+print(''.join(chr(a) for a in answer))<br>
+<br>
+This prints out our second input 'Bagel_Cannon'<br>
+<br>
+And thats it! we get to see our flag!<br>
+<img src="flareon1_pics/memecat4.png"</><br>
+
+    </div>
+  </div>
+  <div id="box-right">
+  </div>
+  
+</body>
+</html>
+

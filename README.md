@@ -1,2 +1,2 @@
 # SaintChimera.github.io
-RE blog, Don't look at my bad code please.
+RE blog, please go to SaintChimera.github.io to see the blog rather than the raw code.
