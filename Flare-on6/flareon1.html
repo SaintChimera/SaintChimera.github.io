@@ -51,7 +51,8 @@ An if statement wrapping some code where it checks your input against the string
 This one relies on another function to validate the input. This function just iterates over the array of random characters below it and xor's each one against the plaintext "A".
 <br>
 reimplemented in python, it would look like the logic below.
-<br><br>
+<br>
+<br>
 answer = [bytes([3]),b' ',b'&',b'$',b'-',bytes([0x1e]),bytes([2]),b' ',b'/',b'/',b'.',b'/']<br>
 for i in range(0,len(answer)):<br>
 	answer[i] = ord(answer[i]) ^ ord("A");<br>
