@@ -55,7 +55,7 @@ reimplemented in python, it would look like the logic below.
 <br>
 answer = [bytes([3]),b' ',b'&',b'$',b'-',bytes([0x1e]),bytes([2]),b' ',b'/',b'/',b'.',b'/']<br>
 for i in range(0,len(answer)):<br>
-	answer[i] = ord(answer[i]) ^ ord("A");<br>
+&nbsp;&nbsp;&nbsp;&nbsp;answer[i] = ord(answer[i]) ^ ord("A");<br>
 print(''.join(chr(a) for a in answer))<br>
 <br>
 This prints out our second input 'Bagel_Cannon'<br>
