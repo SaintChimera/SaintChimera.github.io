@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SaintChimera RE blog</title>
+  <link href="https://SaintChimera.github.io/main.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+  <div id="menu">
+    <ul>
+      <li class="head"><a href="https://SaintChimera.github.io/index.html">Blog</a></li>
+      <li class="head"><a href="https://SaintChimera.github.io/about.html">About</a></li>
+    </ul>
+  </div>
+  
+  <div id="padding">
+  </div>
+  
+  <div id="box-left">
+    <div class="content" id="about">
+      Twitter: <a href="https://twitter.com/SaintChimeraRL" target="_blank">@SaintChimeraRL</a><br>
+      Email: <a href=mailto:SaintChimeraRL@gmail.com" target="_blank">SaintChimeraRL@gmail.com</a>
+    </div>
+  </div>
+  <div id="box-center">
+    <div class="content">
+
+Challenge 2: "Overlong"<br>
+<br>
+<br>
+The secret of this next challenge is cleverly hidden. However, with the right approach, finding the solution will not take an <b>overlong</b> amount of time.<br>
+<br>
+<br>
+I started by opening the executable in Ghidra. The main function is quite small, with 2 calls. The first to an unknown function, and the second to MessageBoxA. If you were to run this sample, you'd find that it prints a message box with the text "Output" and "i never broke the encoding". We see the "Output" string in our ascii strings, but not the encoding string.<br>
+<br>
+Following the first unknown function(FUN_401160), it is also quite small with an obvious loop, and a call within the loop. Following this call(FUN_401000), the code contains lots of bitwise operations. Loops and bitwise operations together are a clear indication of encryption or encoding.<br>
+<br>
+<img src="flareon2_pics/ghidra1.png"/><br>
+<i>FUN401160 loop function</i>
+<img src="flareon2_pics/ghidra2.png"/><br>
+<i>FUN401000 decryption function</i>
+<br>
+The decrypting function gets its input data(the expected encrypted string) as a parameter. If you follow this being pushed to the function, you see the that is is pushed to the looping function from main. Back in main, you find that the this location is 402008(mapped).<br>
+<br>
+I often like to validate my deductions at a point like this. We need to discover where the decrypted string is placed, as its often placed in the same location that our encrypted file is but not always. In this case, we see a local variable declared in main, which is passed to the loop function, and again passed to our decryption function. The decryption function places the result of the bitwise operations into this location. This same local variable is passed to MessageBox.<br>
+<br>
+Watching this memory location, we will see our previously output string "i never broke the encoding" printed.<br>
+Something to be noticed is that the encrypted string in memory isn't fully used. Theres still about 100 unused bytes. The number of loops taken determines the number of bytes decrypted. Our loop counter is compared against a parameter to the function.<br>
+<br>
+<img src="flareon2_pics/ghidra3.png"/><br>
+<i>The loop counter as a parameter</i>
+<br>
+If we trace it back to main, we see that the argument is a hardcoded value 0x1c. Lets change this to the full length of the encrypted string and see what it prints.<br>
+If you cannot patch the instruction in the code(due to the size), you can always change it on the stack once its pushed where the size is always 4 bytes.<br>
+<img src="flareon2_pics/debugger2.png"/><br>
+<i>Changing the loop counter to be the length of the encrypted data</i>
+<br>
+<img src="flareon2_pics/debugger1.png"/><br>
+<i>Success!!</i>
+<br>
+<br>
+The extra string ends up being our flag "I_a_M_t_h_e_e_n_C_o_D_i_n_g@flare-on.com"
+
+    </div>
+  </div>
+  <div id="box-right">
+  </div>
+  
+</body>
+</html>
+
