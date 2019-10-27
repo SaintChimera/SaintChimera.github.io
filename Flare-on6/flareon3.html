@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SaintChimera RE blog</title>
+  <link href="https://SaintChimera.github.io/main.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+  <div id="menu">
+    <ul>
+      <li class="head"><a href="https://SaintChimera.github.io/index.html">Blog</a></li>
+      <li class="head"><a href="https://SaintChimera.github.io/about.html">About</a></li>
+    </ul>
+  </div>
+  
+  <div id="padding">
+  </div>
+  
+  <div id="box-left">
+    <div class="content" id="about">
+      Twitter: <a href="https://twitter.com/SaintChimeraRL" target="_blank">@SaintChimeraRL</a><br>
+      Email: <a href=mailto:SaintChimeraRL@gmail.com" target="_blank">SaintChimeraRL@gmail.com</a>
+    </div>
+  </div>
+  <div id="box-center">
+    <div class="content">
+
+Challenge 3: "Flarebear"<br>
+<br>
+<br>
+We at Flare have created our own Tamagotchi pet, the flarebear. He is very fussy. Keep him alive and happy and he will give you the flag.
+<br>
+<br>
+This challenge comes with an apk file which is a format for Android. So for running this, we'll need an android emulator. As for an emulator, I used the <a href="https://developer.android.com/studio/install">Android Studio</a>. Android Studio does decompilation for you as well. I didn't prefer the decompiled view in Android Studio so i opted to use <a href="https://github.com/pxb1988/dex2jar">dex2jar</a> and jd-gui<br>
+<br>
+Running the program, we start a new game, and name select a name. I named mine Goose.<br>
+<br>
+<img src="flareon3_pics/Goose1.png"/><br>
+<i>Goose the bear</i><br>
+<br>
+We're given 3 activities to do with Goose. Feed him, play Ball with him, or clean up after him. There isn't much else to be gathered from just running it<br>
+<br>
+Lucky for us, the decompiled code isn't stripped or obfuscated and the flow is straightforward. We can view the names of each function for one that is interesting to us. In this case there is one named "danceWithFlag" which we can see has some decryption built in.<br>
+<br>
+<img src="flareon3_pics/Goose4.png"/><br>
+<i>danceWithFlag</i><br>
+<br>
+Searching the rest of the code for useses of the function finds that this function is called within "setMood". danceWithFlag will run if "isEcstatic" returns True.<br>
+This function returns true if the variable "mass" is equal to 72, happy is equal to 30, and clean is equal to 0.<br>
+<br>
+<img src="flareon3_pics/Goose3.png"/><br>
+<i>isEcstatic</i><br>
+<br>
+Now we need to find where those variables are set. These are changed in 3 functions. feed, play, and clean.<br>
+feed raises the mass 10, raises the happy 2, and lowers the clean 1.<br>
+play lowers mass 2, raises happy 4, and lowers clean 1.<br>
+clean doesn't change mass, lowers happy 1, and raises clean 6<br>
+So to set the state that would trigger the bear to dance with the flag, we need to find a combination to press the buttons when interacting with Goose the bear.<br>
+This isn't too tough. Feed him 8x, play with him 4x, and clean him 2x.<br>
+<br>
+<img src="flareon3_pics/Goose5.png"/><br>
+<i>danceWithFlag</i><br>
+<br>
+Flag: th4t_was_be4rly_a_chall3nge@flare-on.com<br>
+
+    </div>
+  </div>
+  <div id="box-right">
+  </div>
+  
+</body>
+</html>
+

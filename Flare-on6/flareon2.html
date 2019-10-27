@@ -38,9 +38,11 @@ I started by opening the executable in Ghidra. The main function is quite small,
 Following the first unknown function(FUN_401160), it is also quite small with an obvious loop, and a call within the loop. Following this call(FUN_401000), the code contains lots of bitwise operations. Loops and bitwise operations together are a clear indication of encryption or encoding.<br>
 <br>
 <img src="flareon2_pics/ghidra1.png"/><br>
-<i>FUN401160 loop function</i>
+<i>FUN401160 loop function</i><br>
+<br>
 <img src="flareon2_pics/ghidra2.png"/><br>
-<i>FUN401000 decryption function</i>
+<i>FUN401000 decryption function</i><br>
+<br>
 <br>
 The decrypting function gets its input data(the expected encrypted string) as a parameter. If you follow this being pushed to the function, you see the that is is pushed to the looping function from main. Back in main, you find that the this location is 402008(mapped).<br>
 <br>
@@ -50,15 +52,15 @@ Watching this memory location, we will see our previously output string "i never
 Something to be noticed is that the encrypted string in memory isn't fully used. Theres still about 100 unused bytes. The number of loops taken determines the number of bytes decrypted. Our loop counter is compared against a parameter to the function.<br>
 <br>
 <img src="flareon2_pics/ghidra3.png"/><br>
-<i>The loop counter as a parameter</i>
+<i>The loop counter as a parameter</i><br>
 <br>
 If we trace it back to main, we see that the argument is a hardcoded value 0x1c. Lets change this to the full length of the encrypted string and see what it prints.<br>
 If you cannot patch the instruction in the code(due to the size), you can always change it on the stack once its pushed where the size is always 4 bytes.<br>
 <img src="flareon2_pics/debugger2.png"/><br>
-<i>Changing the loop counter to be the length of the encrypted data</i>
+<i>Changing the loop counter to be the length of the encrypted data</i><br>
 <br>
 <img src="flareon2_pics/debugger1.png"/><br>
-<i>Success!!</i>
+<i>Success!!</i><br>
 <br>
 <br>
 The extra string ends up being our flag "I_a_M_t_h_e_e_n_C_o_D_i_n_g@flare-on.com"
