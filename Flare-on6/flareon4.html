@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>SaintChimera RE blog</title>
+  <link href="https://SaintChimera.github.io/main.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+  <div id="menu">
+    <ul>
+      <li class="head"><a href="https://SaintChimera.github.io/index.html">Blog</a></li>
+      <li class="head"><a href="https://SaintChimera.github.io/about.html">About</a></li>
+    </ul>
+  </div>
+  
+  <div id="padding">
+  </div>
+  
+  <div id="box-left">
+    <div class="content" id="about">
+      Twitter: <a href="https://twitter.com/SaintChimeraRL" target="_blank">@SaintChimeraRL</a><br>
+      Email: <a href=mailto:SaintChimeraRL@gmail.com" target="_blank">SaintChimeraRL@gmail.com</a>
+    </div>
+  </div>
+  <div id="box-center">
+    <div class="content">
+
+Challenge 3: "Dnschess"<br>
+<br>
+<br>
+Some suspicious network traffic led us to this unauthorized chess program running on an Ubuntu desktop. This appears to be the work of cyberspace computer hackers. You'll need to make the right moves to solve this one. Good luck!
+<br>
+<br>
+We receive three files. A pcap, an so library named ChessAI.so, and an executable named ChessUI. If we run ChessUI, we see that its a chess game with some prompt text at the bottom. Attempting to make moves within the game makes the computer resign<br>
+<br>
+<br>
+<img src="flareon4_pics/dnschess1.png"/><br>
+<i>dnschess</i><br>
+<br>
+<br>
+The PCAP is is filled with dns entries for what look to be chess moves with the domain game-of-thrones.flare-on.com. Each request has a different IP response as well.<br>
+<br>
+Running strings on ChessAI.so, we see multiple strings that look like they could be opponent messages in the chat. One of which we have already seen in the chat. Others include the one from our dns queries in our PCAP.<br>
+<br>
+By the name and the strings, we can probably start analyzing ChessAI.so first. It seems to be where the logic exists within this program.<br>
+<br>
+ChessAI.so has 3 exports which we might be interested in. getAiGreeting, getAiName, and getNextMove. The first 2 are rather small and there isn't much to analyze, but getNextMove contains the domain from our pcap as well as a strcat and gethostbyname.<br>
+<br>
+<br>
+<img src="flareon4_pics/ghidra1.png"/><br>
+<i>exported functions and libc calls</i><br>
+<br>
+<br>
+Immediately following the gethostbyname, there are 3 if statements and a longer block of code which uses the strings which are likely displayed when a correct move is played.<br>
+<br>
+The end string out of this pointer table is blank initially, with an @flare-on.com string following it. Our flag is likely filled out here<br>
+<br>
+<img src="flareon4_pics/ghidra2.png"/><br>
+<i>three if statements</i><br>
+<br>
+<br>
+<img src="flareon4_pics/ghidra3.png"/><br>
+<i>success code</i><br>
+<br>
+<br>
+With the larger block of code using strings which appear positive in nature, that block is likely a success criteria, and the three if statements are likely the checks which we need to satisfy for the challeng.<br>
+<br>
+The first check right after the call to gethostbyname and right before the jump is comparing RAX with 0. This is checking whether gethostbyname returned the hostent struct or failed to query.<br>
+<br>
+The below three lines of code in the 010124c block are taking the <a href="https://www.gnu.org/software/libc/manual/html_node/Host-Names.html">hostent struct returned from gethostbyname</a> and extracting the ip which the hostname resolved to.<br>
+&nbsp;&nbsp;MOV  RAX,qword ptr [RBP + local_68]<br>
+&nbsp;&nbsp;MOV  RAX,qword ptr [RAX + 0x18]<br>
+&nbsp;&nbsp;MOV  RAX,qword ptr [RAX]<br>
+<br>
+<br>
+The first comparison is "CMP AL,0x7f". AL would be the first byte of the resolved IP, so this check looks for the first byte of the resolved IP to be decimal 127.<br>
+<br>
+The second compare block moves the pointer to the resolved IP address into RAX, adds 3 to it, then dereferences it into RAX. This would store the last byte of the resolved IP address in AL.<br>
+Then AL is bitwise 'AND'ed with 1, which would set all bits to 0 within AL except for the first bit representing "1"(0b00000001).<br>
+Then "TEST EAX,EAX" checks if there are any bits set within EAX and updates the Zero Flag(ZF) accordingly.<br>
+JNZ jumps if the ZF is set to 0, meaning that EAX had some bits set. Being that all bits were cleared except the 1 position, the only way this jump would be taken is if the 4th byte in the resolved IP was odd.<br>
+So the second compare block is checking whether or not the 4th byte is even or not.<br>
+<br>
+The third compare block moves the pointer to the resolved IP address into RAX, adds 2 to it, then dereferences it into RAX. This would store the 3rd byte from the resolved IP address into AL<br>
+Then this value is 'AND'ed with 0xf and compared with some local variable which has not been analyzed yet.<br>
+If we analyze that variable, we see that the only place where it is written is at the top of the function, when it is pulled from EDI into the local variable stack location. In this case, with a 64-bit gcc compiled application, the local variable we're analyzing is set from a parameter to the getNextMove function.<br>
+<br>
+Sometimes, its easier to let the program run in a debugger(i use edb typically) and set a breakpoint to discover what a variable is going to be equal to. So i'm going to create an /etc/hosts entry which matches the above criteria. This dns entry has to match a move which i will be making on the chess board. I picked "pawn-c2-c3.game-of-thrones.flare-on.com 127.0.10.2" and since i'm already here, i made a few more entries "pawn-c3-c4.game-of-thrones.flare-on.com 127.0.11.2" and "pawn-c4-c5.game-of-thrones.flare-on.com 127.0.12.2".<br>
+<br>
+When we give this sample input, and break at the point where the code compares our input to argument, we see that the local variable set to the argument to the function is set to 0. Its unclear what this means yet. Our input is not correct, but i'm going to set the ZF to 1 to prevent the program for stopping the game. Then we get to see what the next loop gives us for the argument that is compared against.<br>
+<br>
+<br>
+<img src="flareon_pics/edb1.png"/><br>
+<i>local variable, which is compared to our input IP address</i><br>
+<br>
+<br>
+Running this 2 more times with our local DNS entries set, we see the argument which is passed to getNextMove being incremented each run<br>
+<br>
+<br>
+<img src="flareon_pics/edb2.png"/><br>
+<i>local variable increment once</i><br>
+<br>
+<br>
+<br>
+<br>
+<img src="flareon_pics/edb3.png"/><br>
+<i>local variable increment twice</i><br>
+<br>
+<br>
+Its reasonable to think that this local variable(and passed in argmument) is the current move which we are on in the Chess game.<br>
+We could just create entries which satisfy the logic, but a quick analysis of the large block of success code shows that the resolved IP is used to decrypt the unset data string that is printed last within the string pointer table that we identified early in our analysis. Giving the code arbitrary input will yield us an incorrect flag.<br>
+The pcap contains data resolved DNS entries similar to how we've constructed ours for the debugging purposes. Not all of the entries match the logic that the code employs though. So adding all the entries to /etc/hosts and trying them will not always work.<br>
+<br>
+We need to discover which entries match the logic, and the possible order which the DNS entries may need to be played in to have the code reconstruct the flag.<br>
+For this, i wrote a small python script which has all the DNS entries and their resolved IP's(found in the pcap) in a dictionary table. The script then checks every value in the dictionary and prints the possible location which that entry would be a valid move at.<br>
+<br>
+<br>
+answers = {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'rook-c3-c6':[127,150,96,223],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-g1-f3':[127,252,212,90],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-c2-c4':[127,215,177,38],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-c7-d5':[127,118,118,207],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-f1-e2':[127,89,38,84],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'rook-a1-g1':[127,109,155,97],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-c1-f4':[127,217,37,102],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-c6-a8':[127,49,59,14],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-e2-e4':[127,182,147,24],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'king-g1-h1':[127,0,143,11],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-g1-h3':[127,227,42,139],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'king-e5-f5':[127,101,64,243],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-d1-f3':[127,201,85,103],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-e5-e6':[127,200,76,108],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'king-c4-b3':[127,50,67,23],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'king-c1-b1':[127,157,96,119],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-d1-h5':[127,99,253,122],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-f3-c6':[127,25,74,92],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-d2-c4':[127,168,171,31],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-c6-c7':[127,148,37,223],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-f4-g3':[127,108,24,10],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'rook-d3-e3':[127,37,251,13],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-e4-e5':[127,34,217,88],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-a8-g2':[127,57,238,51],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-a3-b4':[127,196,103,147],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-h5-f7':[127,141,14,174],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-h4-h5':[127,238,7,163],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-e2-f3':[127,230,231,104],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-g2-g3':[127,55,220,79],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-h8-g6':[127,184,171,45],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-b3-f7':[127,196,146,199],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'queen-d1-d6':[127,191,78,251],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'knight-b1-c3':[127,159,162,42],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-f1-d3':[127,184,48,79],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'rook-b4-h4':[127,127,29,123],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-c1-a3':[127,191,34,35],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'bishop-e8-b5':[127,5,22,189],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'rook-f2-f3':[127,233,141,55],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-a2-a4':[127,55,250,81],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;'pawn-d2-d4':[127,53,176,56]<br>
+}<br>
+<br>
+<br>
+for key in answers:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;working_arr = answers[key]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;if (working_arr[3] & 1 == 0):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(key, working_arr[3] & 1, working_arr[2] & 0xf)<br>
+<br>
+<br>
+<img src="flareon4_pics/solver_output.png"/><br>
+<i>valid DNS entries</i><br>
+<br>
+<br>
+Then we just have to create these entries in /etc/hosts, and play the moves in order in the ChessUI program.<br>
+<br>
+<br>
+<img src="flareon4_pics/chess2.png"/><br>
+<i>Success!!</i>
+<br>
+<br>
+Answer: LooksLikeYouLockedUpTheLookupZ@flare-on.com<br>
+
+    </div>
+  </div>
+  <div id="box-right">
+  </div>
+  
+</body>
+</html>
