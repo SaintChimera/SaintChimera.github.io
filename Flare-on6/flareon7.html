@@ -29,10 +29,10 @@
 Challenge 7: "wopr"<br>
 <br>
 <br>
-We used our own computer hacking skills to "find" this AI on a military supercomputer. It does strongly resemble the classic 1983 movie WarGames. Perhaps life imitates art? If you can find the launch codes for us, we'll let you pass to the next challenge. We promise not to start a thermonuclear war.
+We used our own computer hacking skills to "find" this AI on a military supercomputer. It does strongly resemble the classic 1983 movie WarGames. Perhaps life imitates art? If you can find the launch codes for us, we'll let you pass to the next challenge. We promise not to start a thermonuclear war.<br>
 <br>
 This challenge is cool because its frozen python. One easy way to tell is with strings(i use <a href="https://github.com/fireeye/flare-floss">floss</a>). There are references to python libraries including "python37.dll".<br>
-If we run this, it prints a terminal prompt. The only thing you can do at the terminal is to play the "GLOBAL THERMONUCLEAR WAR" game. this prints out a map, asks you to pick a country, then prompts you for the nuclear launch code. This code is obviously what we're looking to reverse
+If we run this, it prints a terminal prompt. The only thing you can do at the terminal is to play the "GLOBAL THERMONUCLEAR WAR" game. this prints out a map, asks you to pick a country, then prompts you for the nuclear launch code. This code is obviously what we're looking to reverse<br>
 <br>
 <br>
 <img src="flareon7_pics/terminal2.png"/><br>
@@ -65,27 +65,73 @@ There is a trick though! and it uses the function "ho". Just above "eye" the cod
 Now that we've gotten past the anti-analysis, and we understand the code, we want to get it to print. There is a for loop which wraps the interesting code, and that loop just prevents us from knowing the exact number that gets added to BOUNCE and passed to fire. We will need to change that with to save any attempt to lzma decompress to disk and print whenever it is successful. We will also need to make the key "BOUNCE" available from disk, since the code usually gets it a different way.<br>
 <br>
 <br>
-<img src="flareon6_pics/terminal4.png"/><br>
+<img src="flareon7_pics/terminal4.png"/><br>
 <i>before editing</i><br>
 <br>
 <br>
 <br>
 <br>
-<img src="flareon6_pics/terminal5.png"/><br>
+<img src="flareon7_pics/terminal6.png"/><br>
 <i>after editing</i><br>
 <br>
 <br>
 Hilariously, this code doesn't work as one might expect. The debug output reveals that all values for i fail in some way, but only value 74 gives an error that we can work with. That error is an EOF error. Meaning it read the lzma header correctly and decompressed all the data it was given. It just stopped receiving data before it expected. So I accomydated here and changed the code again to print out the uncompressed output for i=74<br>
 <br>
 <br>
-<img src="flareon6_pics/terminal6.png"/><br>
+<img src="flareon7_pics/terminal5.png"/><br>
 <i>just 74</i><br>
 <br>
 <br>
-Viewing the data in a hex editor, we see a 7z magic number. If we decompress this with 7z, we still get EOF errors, but data is written to disk anyway. This data is the script that prints our terminal output, and accepts our password. Looking at the end of the script, there is no sign that there is important data cut off from the end.<br>
-
-
-Answer: d0nT_tRu$t_vEr1fy@flare-on.com<br>
+Viewing the data in a hex editor, we see a 7z magic number. If we decompress this with 7z, we still get EOF errors, but data is written to disk anyway. This data is the script that prints our terminal output, and accepts our password. Looking at the end of the script, there is no sign that there is important data cut off from the end so it looks like 7z decompressed the data properly.<br>
+<br>
+At the bottom of this script is the text that will be printed if we give a correct launch code. Just above this is the prompt for the launch code, a large group of xor's, and an if statement comparing the result of the above xor and an unknown variable "h".<br>
+<br>
+<br>
+<img src="flareon7_pics/terminal7.png"/><br>
+<i>the key "hashing" algorith and hash comparison</i><br>
+<br>
+<br>
+The assignment of "h" can be found at the top of the script. h is set as the return from the function "wrong()", then gets xor'd against a hardcoded list.<br>
+<br>
+Analyzing "wrong()", we see that a call to GetModuleHandleW is called first. This call with no arguments returns a handle to the location of the executable used to start the process. Structs are unpacked from the data at this pointer multiple times until finally something is md5 hashed and returned.<br>
+Luckily, we dont actually have to know what is hashed, we just need to know the value of h. To discover the value of h, it is easiest to change wrong() so that it has the can execute properly. Most of this is syntax changes and understanding that at some points the code is expecting need to do pointer arithmetic to get its data. Another thing to change is the call to GetModuleHandleW, since we wont be running this within a frozen executable anymore, that call will not work. I change the call to the loading of the executable.<br>
+The picture below display my code changes.<br>
+<br>
+<br>
+<img src="flareon7_pics/terminal8.png"/><br>
+<i>wrong function</i><br>
+<br>
+<br>
+Then to get the value of h, you just need to put a print statement after it is xor'd. Then we can use that to reverse the xor equations to solve for b.<br>
+<br>
+My theory for how to solve this was based on the fact that xoring a byte against another byte 2 times, will result in the original byte being returned. This meant that any number of equations that could be concatenated together may be reducable(via double xor) to a function which only has one value remaining on the right side of the equation (the values of our input).<br>
+<br>
+A simple example is if we are given the equations <b>z = a ^ b ^ c</b>, and <b>y = a ^ b</b>. These would be reducable to <b>z ^ y = c</b> as the a and b operations would cancel out. y and z would be xor'd against eachother as a result of the concatenation. This same principle would apply at a larger scale such as that which we are given in the challenge.<br>
+<br>
+So i implemented a script which would do that named <a href="https://github.com/SaintChimera/SaintChimera.github.io/blob/master/Flare-on6/flareon7_code/reducer.py">reducer.py</a>. The code is a little crazy, but it has up to date comments for those who wish to understand it specifically.<br>
+<br>
+The short explanation is that the script takes all linear equations, concatenates them together individually (like a brute force), and reduces that concatenation to get an equation which may be solvable. If there is only one variable that exists on the right side, then we can solve for that variable. Once we know that variable, we can update a master list of variables which have been solved for with the value that we have just solved for, and restart the process over again.<br>
+Keeping a master list of variables which have have been successfully solved for and using that to update(fix) the list that is returned from the reduction of concatenated lists makes all subsequent reductions more likely to be solvable, as we are conceptually updating a variable to be a constant in the equations.<br>
+<br>
+<br>
+<img src="flareon7_pics/terminal9.png"/><br>
+<i>reducer.py printing the correct launch code</i><br>
+<br>
+<br>
+Entering this code into the original python executable will print the flag. Since i was no longer working with the executable anymore, i dumped the fire function(rc4 algorithm) to another file and passed the parameters in as the frozen python executable would have.<br>
+<br>
+<br>
+<img src="flareon7_pics/terminal10.png"/><br>
+<i>the flag printed to us!</i><br>
+<br>
+<br>
+Answer: L1n34R_4L93bR4_i5_FuN@flare-on.com<br>
+<br>
+<br>
+<br>
+<br>
+<h3>The Linear Algrebra way</h3>
+I did not solve solve this quite the same way as the official solution. The <a href="https://www.fireeye.com/content/dam/fireeye-www/blog/pdfs/FlareOn6_Challenge7_Solution_WOPR.pdf">official solution</a> uses Gauss-Jordan elimination to produce the inverse matrix which allows you to very easily solve for each variable. It wasn't until i was 90% completed with my implementation and explaining the challenge and solution to someone that i realized that the solution was probably simple with Linear Algebra. Being that i hadn't studied Linear Algebra in many years, i wasn't going to derail my current solution unless it failed.<br>
 
     </div>
   </div>
